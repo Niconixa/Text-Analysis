@@ -1,0 +1,111 @@
+from collections import Counter
+import re
+
+#group together symbols which end sentences
+sentenceEnders = re.compile('[.!?]')
+#file needs to be encoded as utf16 for it to be readable
+with open("stopwordlist.txt", encoding="utf16") as f:
+		stopwords = f.read()
+		#making file a list of words
+		stopwordlist = list(stopwords.split())
+
+def cleantext(filename):
+    #function to open unspecified text documents
+    with open(filename) as h:
+        #open and read text as h variable
+        rawtext = h.read()
+        #remove new line, backslashes and quote marks from text (needed for csv formatting)
+        refinedtext = rawtext.replace("\n", "").replace("\\", " ").replace("\"", "'")
+        #remove punctuation and dashes from text in order to prepare for tokenisation
+        characterlesstext = re.sub("[.,?!'\";:]", "", refinedtext).replace("‐", " ").replace("--", " ")
+        #makes list of lowercase words in text
+        tokensintext = characterlesstext.lower().split()
+        #returns 2 values needed for the assignments, clean text and list of words as tokens
+    return refinedtext, tokensintext
+
+#call on function to open muller and sapir texts and return clean text and word token list 
+mullertext, tokenmuller = cleantext("Muller1861_lecture1.txt")
+sapirtext, tokensapir = cleantext("Sapir1921_chapter1.txt")
+
+#makes list of words from the two texts, removing stopwords
+stoplistsapir = [word for word in tokensapir if word not in stopwordlist]
+stoplistmuller = [word for word in tokenmuller if word not in stopwordlist]
+
+#Task 1
+def howmanywords(text):
+    #function to split text according to empty spaces, and count the given number of words
+    countwords = len(text.split())
+    #return number of words counted
+    return countwords
+
+def getlistofsortedsentences(text):
+    #split text according to symbols which end sentences
+    sentences = sentenceEnders.split(text)
+    #sentences are sorted into length order, according to the number of words, calling function howmanywords
+    sortsentences = sorted(sentences, reverse=True, key=lambda sentence: howmanywords(sentence))
+    #Returns only top 10 results
+    return sortsentences[0:10]
+
+#Task 2
+def removestopwords(tokens):
+	#counter sorts toke list into those most commonly used and the amount of times they appear
+    allwords=Counter(tokens)
+    #create list of top10 results
+    top10=[]
+	#specifies 10 most common words and number of times they appear should be collected
+    for word, count in allwords.most_common(10):
+		#calculates length of word and makes it into a string
+        wordlength = str(len(word))
+        #adds word, frequency, length, chapter 1 and new line character to top10 list, formatted for output to csv file 
+        top10.append('{}; {:>2};'.format(word, count) + wordlength + ";" + "1" + "\n")
+    return top10
+
+#header for sentence csv file
+sentenceheader = "length;sentence;chapter;ranking\n"
+#marker for data
+sentencedata = ""
+
+#call function to process sentences for mullertext
+sentencelengthmuller=getlistofsortedsentences(mullertext)
+#start counting for ranking at number 1
+sum = 1
+#loop to go through all 10 sentences in function output
+for sentence in sentencelengthmuller:
+    #csv file data; make string of number of words in sentence, sentence itself, chapter 1 for all texts, incrementally increase ranking by one and end of line
+    sentencedata = sentencedata + str(howmanywords(sentence)) + ";" + "\"" + sentence + "\"" + ";" + "1" + ";" + str(sum) + "\n"
+    #everytime sum is called, it goes up by one
+    sum = sum + 1
+
+#same process for sapir text
+sentencelengthsapir=getlistofsortedsentences(sapirtext)
+sum = 1
+for sentence in sentencelengthsapir:
+    sentencedata = sentencedata + str(howmanywords(sentence)) + ";" + "\"" + sentence + "\"" + ";" + "1" + ";" + str(sum) + "\n"
+    sum = sum + 1
+
+#put sentence header and data together for sentences csv file
+csvsentences = sentenceheader + sentencedata
+
+#open csv file, or create if not pre-existing
+Sentencesfw = open ("Sentences.csv", "w+")
+#write header and data to csv file
+Sentencesfw.write(csvsentences)
+
+#header for word csv file
+wordsheader = "keyword;frequency;length;chapter\n"
+
+#data for words to be outputted as string
+wordsdata = ""
+#word data calls on function to process wordlist with stop words removed, output pre-formatted for csv file
+wordsdata = wordsdata + ''.join(removestopwords(stoplistmuller))
+wordsdata = wordsdata + ''.join(removestopwords(stoplistsapir))
+
+#put word header and data together for word csv file
+CsvWords = wordsheader + wordsdata
+
+#same as above for sentences csv file
+Wordsfw = open ("Words.csv", "w+")
+Wordsfw.write(CsvWords)
+#print confirmation of task completion
+print ("File saved")
+
