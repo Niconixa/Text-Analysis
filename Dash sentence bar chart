@@ -1,0 +1,47 @@
+import dash
+import dash_core_components as dcc
+import dash_html_components as html
+import plotly.graph_objs as go
+import pandas as pd
+
+#function using pandas to open csv file in read only mode, with semi-colon denoting new field entry
+def openfile(filename):
+    with open(filename, 'r')as h:
+        csv_reader = pd.read_csv(h, delimiter=';')
+    return csv_reader
+
+#all contents of file returned as csv reader, which is then split based on header name
+csv_reader = openfile("Sentences.csv")
+length = csv_reader.length
+ranking = csv_reader.ranking
+chapter = csv_reader.chapter
+sentence = csv_reader.sentence
+
+#use graph objects
+fig = go.Figure()
+#traces allows more than input of data for graph, bar specifies bar chart
+fig.add_trace(go.Bar(
+    #y axis calls on csv data related to Muller
+    x=ranking, 
+    y=length[0:10],
+    name='Muller',
+    hoverinfo='text',
+    hovertext=sentence,
+    ),
+)
+fig.add_trace(go.Bar(
+    x=ranking, 
+    #y axis call on csv data related to Sapir
+    y=length[10:20],
+    name="Sapir",
+    text=sentence,
+    hoverinfo='text'),
+    )
+#titles added
+fig.update_layout(title_text="Sentence Length Comparison: Muller Lecture 1 and Sapir Chapter 1",
+                  title_font_size=24,
+                  xaxis = {'title':'Sentence Ranking'},
+                  yaxis = {'title':'Number of Words'}
+                  )
+#builds directly, without using IP 
+fig.show()
