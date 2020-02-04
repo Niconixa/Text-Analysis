@@ -1,0 +1,50 @@
+import dash
+import dash_core_components as dcc
+import dash_html_components as html
+import plotly.graph_objs as go
+import pandas as pd
+
+#function using pandas to open csv file in read only mode, with semi-colon denoting new field entry
+def openfile(filename):
+    with open(filename, 'r')as h:
+        csv_reader = pd.read_csv(h, delimiter=';')
+    return csv_reader
+
+#all contents of file returned as csv reader, which is then split based on header name
+csv_reader = openfile("Words.csv")
+length = csv_reader.length
+keyword = csv_reader.keyword
+frequency= csv_reader.frequency
+
+
+external_stylesheets = ['https://codepen.io/chriddyp/pen/bWLwgP.css']
+
+app = dash.Dash(__name__, external_stylesheets=external_stylesheets)
+
+app.layout = html.Div(children=[
+	html.H2(children="The 10 Most Common Words in Sapir's Chapter"),
+	#use dash core components
+	dcc.Graph(
+		id='example-graph',
+		figure={
+		'data': [
+		#use graph objects
+			go.Scatter(
+				#show only Sapir's results
+				x=keyword[10:20],
+				y=frequency[10:20],
+				mode='lines',
+				opacity=1,
+				name='Common Words')
+
+		],
+		#dictionary for layout values
+	'layout':{
+	'xaxis':{'title': 'Most Commonly Used Words'},
+	'yaxis':{'title': 'Frequency Rate'}
+	}
+		})
+	])
+#flask method
+if __name__ == '__main__':
+	app.run_server(debug=True)
