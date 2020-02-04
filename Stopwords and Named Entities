@@ -1,0 +1,94 @@
+from collections import Counter
+import re
+
+g = open("Sapir1921_chapter1.rtf")
+text = g.read()
+#processing text with punctuation but without unecessary characters
+refinedtext=text.replace("\n", "").replace("\\", " ")
+#processing text without punctuation for use as word list
+characterlesstext=re.sub("[.,?!'\";:]", "", refinedtext).replace("--", " ")
+#makes list of words from text
+token = characterlesstext.lower().split()
+#file needs to be encoded as utf16 for it to be readable
+with open("stopwordlist.txt", encoding="utf16") as f:
+		stopwords = f.read()
+		#making file a list of words
+		stopwordlist = list(stopwords.split())
+
+#Task 2
+def displaylongestsentence():
+	#group together symbols which end sentences
+	sentenceEnders = re.compile('[.!?]')
+	#split text where sentence ending punctuation appears
+	listofsentences = sentenceEnders.split(refinedtext)
+	#sort sentences in descending order according to number of characters
+	sortsentences=sorted(listofsentences, reverse=True, key=lambda word: len(word))
+	#return longest sentence of the sorted sentences
+	return sortsentences[:1]
+
+#Task 3
+def longestwords():
+	#sort words in descending order according to length of words
+	sortwords=sorted(token, reverse=True, key=lambda word: len(word))
+	#return longest word within list
+	return sortwords[:1]
+
+#Task 4
+def removestopwords():
+	#makes list of words from text removing stopwords
+    stoplist = [word for word in token if word not in stopwordlist]
+	#sorts words into those most commonly used and the amount of times they appear
+    allwords=Counter(stoplist)
+	#This allows for printing text once, rather than for each result
+    print("Task 4: The 10 most common words, excluding those in the stop word list, are:")
+	#specifies 10 most common words and number of times they appear should be collected
+    for word, count in allwords.most_common(10):
+		#prints the word and number in that format
+        print('{}: {:>2}'.format(word, count))
+    return
+
+#Task 5
+def findnamedentities():
+    #quotation marks are removed as sometimes they come after the full stop
+    removequotationmark=re.sub(r"\"", "", refinedtext)
+    #replaces any sentence ender, space and capital letter with a space
+    removefirstwords=re.sub(r"[.!?][\s]{1,2}[A-Z]", " ", removequotationmark)
+#   find all remaining capitalised words
+    namedentities = re.findall("[A-Z][a-z]+[ ]*", removefirstwords)
+    #make list of capitalised words, excluding those at the beginning of sentences
+    lowercasenamedentities=[]
+    #loop
+    for namedentity in namedentities:
+    	#make all entries in list lowercase and remove spacing for comparison with stopwordlist
+    	lowercaseentity=namedentity.lower().replace(" ", "")
+    	#add all named entities to list called lowercasenamedentities
+    	lowercasenamedentities.append(lowercaseentity)
+    #check list of lowercasenamedentities with stopwordlist, removing those that appear there
+    stoplist = [word for word in lowercasenamedentities if word not in stopwordlist]
+    #makes a string of the list of named entities
+    stringnamedentities=' '.join(stoplist)
+    #re-capitalises all words in the string
+    capitalisednamedentities=stringnamedentities.title()
+    #finds named entities from A-L, without spaces
+    namedentitiesAL = re.findall("[A-L][a-z]*", capitalisednamedentities)
+    #puts named entities into a set to remove duplicates
+    A_L=set(namedentitiesAL)
+    #finds named entities from M-Z, without spaces
+    namedentitiesMZ = re.findall("[M-Z][a-z]*", capitalisednamedentities)
+    #puts named entities into a set to remove duplicates
+    M_Z=set(namedentitiesMZ)
+    #ask function to return both sets of results
+    return A_L, M_Z
+
+#prints results of function without square brackets
+print ("Task 2: The longest sentence reads:",','.join(displaylongestsentence()))
+print ("Task 3: The longest word in the text is:", ', ' .join(longestwords()))
+removestopwords()
+#requests both results back from namedentities function 
+A_L,M_Z=findnamedentities()
+#sorts findnamedentities results in alphabetical order and prints them without square brackets
+print("Task 5: Named Entities from A-L:",', '.join(sorted(A_L)))
+print("Task 5: Named Entities from M-Z:",', '.join(sorted(M_Z)))
+
+g.close()
+f.close()
