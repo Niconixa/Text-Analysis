@@ -1,0 +1,99 @@
+from PIL import Image
+
+#function to open image files and get dimensions
+def openimage(file):
+	#use pillow to open image files
+	im = Image.open(file)
+	#set width and height names from size info
+	width = im.size[0]
+	height = im.size[1]
+	#return three values for subsequent naming below
+	return im, width, height
+
+#call on open function and name the three values returned
+LNU_library, width, height = openimage('LNU_library.png')
+Resecentrum_Vaxjo, width, height = openimage('Resecentrum_Vaxjo-no-red.png')
+Kalmar_slott, width, height = openimage('GRK_-_Kalmar_slott_2-noRed-noBlue.png')
+Teleborgs_slott, width, height = openimage('Teleborgs_slott,_Vaxjo,_2015c.jpg')
+Kalmar_stad, width, height = openimage('Kalmar_(stad)_(16409041)-no-blue.png')
+Vaxjo_church, width, height = openimage('Vaxjochurch-no green.png')
+Kronoberg, width, height = openimage('Kronoberg_,Lake_Helgasjon_november_2008_-_panoramio-noGreen-noBlue.png')
+Vaxo_uni, width, height = openimage('Vaxo_University_campus.jpg')
+White_lake, width, height = openimage('White_lake_-_Vaxjo,_Kronoberg-noRed-noGreen.png')
+
+#list for rgb data and images
+rgbimages = []
+
+#function to get average pixel values, calling on 3 results from open file function
+def pixelaverage(imagefile, width, height):
+	#list for red values
+	red = []
+	#count pixels in each file
+	amount = 0
+	#loop to go through every pixel by height and width of image
+	for i in range (0, height):
+		for j in range (0, width):
+			#use pillow to get rgb value of each pixel as tuple
+			RGB = imagefile.getpixel((j,i))
+			#specify want only red value of RGB data
+			r = RGB[0]
+			#add one to amount total of every pixel analysed
+			amount = amount + 1
+			#add red value to list called red
+			red.append(r)
+	#add all red alues together for each image
+	totalred = sum(red)
+	#divide total red value by number of pixels in each image
+	averagered = totalred/amount
+	#make tuple of image, average red value and filename
+	tupleimage = (imagefile, averagered, imagefile.filename)
+	#add tuple to list outside function
+	rgbimages.append(tupleimage)
+	return
+
+#call on function to calculate average pixel value for every image file
+LNU_library_green = pixelaverage(LNU_library, width, height)
+Resecentrum_Vaxjo_green = pixelaverage(Resecentrum_Vaxjo, width, height)
+Kalmar_slott_green = pixelaverage(Kalmar_slott, width, height)
+Teleborgs_slott_green = pixelaverage(Teleborgs_slott, width, height)
+Kalmar_stad_green = pixelaverage(Kalmar_stad, width, height)
+Vaxjo_church_green = pixelaverage(Vaxjo_church, width, height)
+Kronoberg_green = pixelaverage(Kronoberg, width, height)
+Vaxo_uni_green = pixelaverage(Vaxo_uni, width, height)
+White_lake_green = pixelaverage(White_lake, width, height)
+
+#function to call on second value in tuple
+def sorttuple(tuplelist):
+	return tuplelist[1]
+
+#sort list of tuples using second value as key, as defined in function above
+rgbsorted = sorted(rgbimages, key=sorttuple)
+
+#print tuple list, as specified in task 3
+print(rgbsorted)
+
+#create collage image, 3 times the width and height of the provided images
+new_im = Image.new('RGB', (width*3, height*3))
+
+#store values for x and y so know where to put images
+x = 0
+y = 0
+
+#for every tuple in tuple list
+for item in rgbsorted:
+	#image is first value in tuple
+	image = item[0]
+	#if width is equal to 3 images, go down a row in height
+	if (x == width*3):
+		y = y + height
+		#place new image at beginning of width of image
+		x = 0
+	#place new image in this location
+	new_im.paste(image, (x, y))
+	#increment width measurements by width measurements of last image
+	x = x + width
+
+#call new image collage and save
+new_im.save('collage.png')
+
+
