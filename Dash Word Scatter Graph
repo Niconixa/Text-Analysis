@@ -1,0 +1,69 @@
+import dash
+import dash_core_components as dcc
+import dash_html_components as html
+import plotly.graph_objs as go
+import pandas as pd
+
+#function using pandas to open csv file in read only mode, with semi-colon denoting new field entry
+def openfile(filename):
+    with open(filename, 'r')as h:
+        csv_reader = pd.read_csv(h, delimiter=';')
+    return csv_reader
+
+#all contents of file returned as csv reader, which is then split based on header name
+csv_reader = openfile("Words.csv")
+length = csv_reader.length
+keyword = csv_reader.keyword
+frequency= csv_reader.frequency
+chapter = csv_reader.chapter
+
+#split up chapter according to authors
+chapter[0:10]='rgb(254,224,144)'
+chapter[10:20]='rgb(171,217,233)'
+
+external_stylesheets = ['https://codepen.io/chriddyp/pen/bWLwgP.css']
+
+app = dash.Dash(__name__, external_stylesheets=external_stylesheets)
+
+app.layout = html.Div(children=[
+	html.H2(children="The 10 Most Common Words in Muller's Lecture"),
+	#use dash core components
+	dcc.Graph(
+		id='example-graph',
+		figure={
+		'data': [
+		#use graph objects
+			go.Scatter(
+				#directly call on header title for csv column data
+				x=length,
+				y=frequency,
+				mode='markers',
+				#dictionary to define marker size and colour, based on csv data
+				marker=dict(
+					size=frequency,
+					color=chapter),
+				#specifies to use keyword data when hovering over marker
+			#	text=keyword,
+				hoverinfo='text',
+				hovertext=keyword,
+				hoveron='points',
+				)
+
+		],
+		#layout as dictionary
+	'layout':{
+	#allows mouse to go to any point on graph
+	'hovermode': "closest",
+	#shows legend to clarify colour coding
+	'showlegend':'True',
+	#axis labels
+	'xaxis':{'title': 'Word Length'},
+	'yaxis':{'title': 'Frequency Rate'},
+#info to show in legend
+	'legend':{'Muller Lecture 1': 'rgb(254,224,144)', 'Sapir Chapter 1': 'rgb(171,217,233)'},
+	}
+		})
+	])
+#flask method
+if __name__ == '__main__':
+	app.run_server(debug=True)
